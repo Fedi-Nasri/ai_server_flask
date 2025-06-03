@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Flask YOLOv11m Object Detection Server
 
 A modular and well-documented Flask server for real-time object detection and tracking using YOLOv11m.
@@ -96,6 +95,3 @@ The modular design makes it easy to extend the project:
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-=======
-# ai_server_flask
->>>>>>> d58f313b970b7b46d4b80d5e378489ab60b9e66f
