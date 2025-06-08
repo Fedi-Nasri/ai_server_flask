@@ -12,6 +12,9 @@ from datetime import datetime
 import cv2
 import numpy as np
 from app.config.config import DETECTION_STORAGE_PATH, SAVE_DETECTIONS
+# Firebase imports
+import firebase_admin
+from firebase_admin import credentials, db
 
 class DetectionStorage:
     """
@@ -34,10 +37,10 @@ class DetectionStorage:
         # Track already seen objects to identify new detections
         self.seen_objects = set()
         
-        # Initialize Firebase (commented out)
-        # self.firebase_app = None
-        # self.db_ref = None
-        # self.initialize_firebase()
+        # Initialize Firebase
+        self.firebase_app = None
+        self.db_ref = None
+        self.initialize_firebase()
         
     def ensure_storage_directory(self):
         """
@@ -50,28 +53,22 @@ class DetectionStorage:
     def initialize_firebase(self):
         """
         Initialize Firebase connection.
-        
-        Note: This method is commented out and will be implemented by the user.
         """
-        # # Import Firebase modules
-        # import firebase_admin
-        # from firebase_admin import credentials, db
-        # 
-        # try:
-        #     # Initialize Firebase app with credentials
-        #     cred_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'firebase-credentials.json')
-        #     cred = credentials.Certificate(cred_path)
-        #     
-        #     # Initialize the app
-        #     self.firebase_app = firebase_admin.initialize_app(cred, {
-        #         'databaseURL': 'https://your-project-id.firebaseio.com/'
-        #     })
-        #     
-        #     # Get reference to the database
-        #     self.db_ref = db.reference('detections')
-        #     print("Firebase initialized successfully")
-        # except Exception as e:
-        #     print(f"Error initializing Firebase: {e}")
+        try:
+            # Initialize Firebase app with credentials
+            cred_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'firebase-credentials.json')
+            cred = credentials.Certificate(cred_path)
+            
+            # Initialize the app
+            self.firebase_app = firebase_admin.initialize_app(cred, {
+                'databaseURL': 'https://oceancleaner-741db-default-rtdb.firebaseio.com/'
+            })
+            
+            # Get reference to the database
+            self.db_ref = db.reference('detections')
+            print("Firebase initialized successfully")
+        except Exception as e:
+            print(f"Error initializing Firebase: {e}")
         
     def store_detection(self, detection, frame):
         """
@@ -90,8 +87,8 @@ class DetectionStorage:
         # Check if this is a new detection
         is_new_detection = object_id not in self.seen_objects
         
-        # Store in Firebase (commented out)
-        # self.store_to_firebase(detection)
+        # Store in Firebase
+        self.store_to_firebase(detection)
         
         # Print detection data
         print(f"Detection: {detection['class']} (ID: {detection['track_id']}) "
@@ -107,31 +104,33 @@ class DetectionStorage:
         
     def store_to_firebase(self, detection):
         """
-        Store detection data to Firebase.
-        
-        Note: This method is commented out and will be implemented by the user.
-        
+        Store detection data to Firebase statistics/wasteTypes node.
+        Increments the count for the detected waste type (metal, glass, plastic).
         Args:
             detection (dict): Detection data
         """
-        # if self.db_ref is None:
-        #     print("Firebase not initialized, skipping data storage")
-        #     return
-        # 
-        # try:
-        #     # Create a unique key for this detection
-        #     detection_key = f"{detection['class']}_{detection['track_id']}_{int(detection['timestamp'])}"
-        #     
-        #     # Store detection data
-        #     self.db_ref.child(detection_key).set({
-        #         'class': detection['class'],
-        #         'track_id': detection['track_id'],
-        #         'confidence': detection['confidence'],
-        #         'timestamp': detection['timestamp'],
-        #         'datetime': datetime.fromtimestamp(detection['timestamp']).isoformat()
-        #     })
-        # except Exception as e:
-        #     print(f"Error storing data to Firebase: {e}")
+        if self.db_ref is None:
+            print("Firebase not initialized, skipping data storage")
+            return
+        try:
+            # Determine waste type
+            waste_type = detection.get('class', '').lower()
+            if waste_type not in ['metal', 'glass', 'plastic']:
+                print(f"Unknown waste type '{waste_type}', skipping Firebase update.")
+                return
+            # Get count (default to 1 if not provided)
+            count = detection.get('count', 1)
+            # Reference to statistics/wasteTypes/<waste_type>
+            waste_type_ref = db.reference('statistics/wasteTypes').child(waste_type)
+            # Transaction to increment the count atomically
+            def increment_count(current):
+                if current is None:
+                    return count
+                return current + count
+            waste_type_ref.transaction(increment_count)
+            print(f"Updated Firebase: Added {count} to {waste_type} count.")
+        except Exception as e:
+            print(f"Error updating statistics/wasteTypes in Firebase: {e}")
         
     def save_detection_image(self, detection, frame):
         """

@@ -29,7 +29,7 @@ IOU_THRESHOLD = float(os.getenv('IOU_THRESHOLD', 0.45))
 
 # Firebase settings (for future implementation)
 FIREBASE_CREDENTIALS = os.getenv('FIREBASE_CREDENTIALS', 'firebase-credentials.json')
-FIREBASE_DATABASE_URL = os.getenv('FIREBASE_DATABASE_URL', 'https://your-project-id.firebaseio.com/')
+FIREBASE_DATABASE_URL = os.getenv('FIREBASE_DATABASE_URL', 'https://oceancleaner-741db-default-rtdb.firebaseio.com/')
 
 # Detection storage settings
 DETECTION_STORAGE_PATH = os.getenv('DETECTION_STORAGE_PATH', 'app/static/datasets/mission')

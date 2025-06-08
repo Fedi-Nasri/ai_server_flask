@@ -41,8 +41,8 @@ class YOLODetector:
             print(f"Error loading YOLOv11m model: {e}")
             # Fallback to a default model if available
             try:
-                self.model = YOLO("yolov8n.pt")  # Fallback to YOLOv8n if YOLOv11m fails
-                print("Fallback to YOLOv8n model")
+                self.model = YOLO("yolov11n.pt")  # Fallback to YOLOv8n if YOLOv11m fails
+                print("Fallback to YOLOv11n model")
             except Exception as e:
                 print(f"Error loading fallback model: {e}")
                 self.model = None
